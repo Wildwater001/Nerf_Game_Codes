@@ -1,0 +1,94 @@
+import time
+import threading
+import random
+import numpy as np
+import sounddevice as sd
+
+def tone(Hz, seconds):
+    frequency = Hz 
+    duration = seconds
+    sample_rate = 44100 # samples per second
+    t = np.linspace(0, duration, int(sample_rate * duration), False)
+    waveform = np.sin(2 * np.pi *frequency * t)
+    sd.play(waveform, sample_rate)
+    sd.wait() #wait until the sound finishes playing
+
+def countdown_timer(seconds): # Function to run as a seperate thread for countdown.
+    global running
+    global deactivated
+
+    for i in range(seconds, 9, -1): # Initial countdown to 10.
+        if deactivated == True:
+            break
+        #print(f"{i}", end="\n\r")
+        # Play the sound.
+        tone(1400, 0.3)
+        time.sleep(0.5)
+    for i in range(20, 0, -1): # 10 seconds remaining.
+        if deactivated == True:
+            break
+        #print(f"{i}", end="\n\r")
+        # Play the sound.
+        tone(2000, 0.3)
+        time.sleep(0.005)
+    
+    running = False
+    if deactivated == False:
+        print("Time's up!")
+        for i in range(3, 0, -1): # Sounds for ended time.
+            tone(550, 1)
+            time.sleep(0.5)
+
+
+def main():
+    global running 
+    global deactivated
+
+    running = True
+    deactivated = False
+
+    act_code = str(random.randint(100000,999999)) # Randomly picks 6 digit string code.
+    input_code = str(input(f"Enter {act_code} activation code: "))
+    while input_code != act_code:
+        print(f"Invalid code.", end="\n\r")
+        act_code = str(random.randint(100000,999999))
+        input_code = str(input(f"Enter {act_code} activation code: "))
+    print(f"Device activated.", end="\n\r")
+
+    # Create a seperate thread for the timer
+    timer_thread = threading.Thread(target=countdown_timer,args=(int(90),))
+    timer_thread.start()
+
+    user_input = 0
+    deact_code = 1
+
+    while running:
+        while user_input != deact_code:
+            deact_code = str(random.randint(100000,999999))
+            user_input = str(input(f"Enter {deact_code} deactivation code: "))
+            if user_input == deact_code:
+                deactivated = True
+                break
+            if running == False:
+                break
+            print(f"Invalid code.", end="\n\r")
+            tone(3000, 0.5)
+            time.sleep(1)
+            tone(3000, 0.5)
+    
+    if deactivated == True:
+        print(f"Device deactivated.", end="\n\r")
+        tone(523.25, 0.35) # Victory Fanfare
+        tone(523.25, 0.35)
+        tone(523.25, 0.35)
+        tone(523.25, 0.5)
+        tone(415.30, 0.5)
+        tone(466.16, 0.5)
+        tone(523.25, 0.45)
+        tone(466.16, 0.35)
+        tone(523.25, 2.0)
+    
+    print("Exiting program...")
+
+if __name__ == "__main__":
+    main()
